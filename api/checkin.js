@@ -1,65 +1,57 @@
 export default async function handler(req, res) {
-  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const {
-    nome,
-    email,
-    turma,
-    equipamento,
-    nomeProjeto,
-    descricao,
-    dataCheckin
-  } = req.body;
+  const { nome, email, turma, equipamento, nomeProjeto, descricao, dataCheckin } = req.body;
 
   if (!nome || !email || !equipamento || !nomeProjeto) {
     return res.status(400).json({ error: 'Campos obrigatórios ausentes.' });
   }
 
-  const NOTION_TOKEN   = process.env.NOTION_TOKEN;
-  const NOTION_DB_ID   = process.env.NOTION_DB_ID;
+  const NOTION_TOKEN = process.env.NOTION_TOKEN;
+  const NOTION_DB_ID = process.env.NOTION_DB_ID;
 
   if (!NOTION_TOKEN || !NOTION_DB_ID) {
     return res.status(500).json({ error: 'Variáveis de ambiente não configuradas.' });
   }
 
-  // Monta o card do Notion
+  const properties = {
+    "Name do Projeto": {
+      title: [{ text: { content: nomeProjeto } }]
+    },
+    "Nome do Aluno": {
+      rich_text: [{ text: { content: nome } }]
+    },
+    "Contato": {
+      email: email
+    },
+    "Machine Type": {
+      select: { name: equipamento }
+    },
+    "Status": {
+      select: { name: "Agendada" }
+    }
+  };
+
+  if (descricao) {
+    properties["Materiais"] = {
+      rich_text: [{ text: { content: descricao } }]
+    };
+  }
+
+  if (dataCheckin) {
+    properties["Data Start"] = {
+      date: { start: dataCheckin }
+    };
+  }
+
   const body = {
     parent: { database_id: NOTION_DB_ID },
-    properties: {
-      // Título principal
-      "Nome do Projeto": {
-        title: [{ text: { content: nomeProjeto } }]
-      },
-      // Status inicial sempre "Agendada"
-      "Status": {
-        status: { name: "Agendada" }
-      },
-      // Nome do aluno
-      "Nome do Aluno": {
-        rich_text: [{ text: { content: nome } }]
-      },
-      // E-mail
-      "Contato": {
-        email: email
-      },
-      // Descrição como materiais/notas
-      "Materiais": {
-        rich_text: [{ text: { content: descricao || '' } }]
-      },
-      // Equipamento
-      "Machine Type": {
-        select: { name: equipamento }
-      },
-      // Data do check-in
-      "Data Start": {
-        date: { start: dataCheckin }
-      }
-    }
+    properties
   };
 
   try {
@@ -76,18 +68,18 @@ export default async function handler(req, res) {
     const data = await notionRes.json();
 
     if (!notionRes.ok) {
-      console.error('Notion error:', data);
-      return res.status(500).json({ error: 'Erro ao criar card no Notion.', detail: data });
+      console.error('Notion API error:', JSON.stringify(data, null, 2));
+      return res.status(500).json({
+        error: data.message || 'Erro ao criar card no Notion.',
+        code: data.code,
+        detail: data
+      });
     }
 
-    return res.status(200).json({
-      success: true,
-      notionPageId: data.id,
-      notionUrl: data.url
-    });
+    return res.status(200).json({ success: true, notionPageId: data.id });
 
   } catch (err) {
-    console.error('Server error:', err);
-    return res.status(500).json({ error: 'Erro interno do servidor.' });
+    console.error('Fetch error:', err.message);
+    return res.status(500).json({ error: 'Erro interno: ' + err.message });
   }
 }
