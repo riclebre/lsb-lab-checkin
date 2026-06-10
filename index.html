@@ -547,7 +547,8 @@ async function doCheckin() {
   const email   = document.getElementById('emailInput').value.trim();
   const turma   = document.getElementById('turmaInput').value.trim();
   const desc    = document.getElementById('projDesc').value.trim();
-  const file    = document.getElementById('fileName').textContent.trim();
+  const fileInput = document.getElementById('fileInput');
+  const fileName  = document.getElementById('fileName').textContent.trim();
   const now     = new Date();
   const ts      = now.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
   const isoDate = now.toISOString().split('T')[0];
@@ -557,6 +558,20 @@ async function doCheckin() {
   document.getElementById('submitBtn').disabled = true;
 
   try {
+    // Convert file to base64 if present
+    let fileBase64 = null;
+    let fileMime   = null;
+    if (fileInput.files && fileInput.files[0]) {
+      const f = fileInput.files[0];
+      fileMime = f.type || 'application/octet-stream';
+      fileBase64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload  = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(f);
+      });
+    }
+
     const res = await fetch('/api/checkin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -565,12 +580,14 @@ async function doCheckin() {
         equipamento: selectedEquip,
         nomeProjeto: proj,
         descricao: desc,
-        dataCheckin: isoDate
+        dataCheckin: isoDate,
+        fileBase64,
+        fileName: fileName || null,
+        fileMime
       })
     });
 
     const data = await res.json();
-
     if (!res.ok) throw new Error(data.error || 'Erro desconhecido');
 
     // Success — fill confirmation
@@ -578,10 +595,10 @@ async function doCheckin() {
     document.getElementById('cTurma').textContent = turma || '—';
     document.getElementById('cEquip').textContent = selectedLabel;
     document.getElementById('cProj').textContent  = proj;
-    document.getElementById('cFile').textContent  = file || '—';
+    document.getElementById('cFile').textContent  = fileName || '—';
     document.getElementById('cTime').textContent  = ts;
     document.getElementById('queueNum').textContent = Math.floor(Math.random() * 5) + 2;
-    if (file) document.getElementById('driveRow').style.display = 'flex';
+    if (data.driveFileUrl) document.getElementById('driveRow').style.display = 'flex';
 
     visitedBefore = true;
     showScreen('s5');
