@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/checkin.js": {
+      "runtime": "edge"
+    }
+  }
+}
