@@ -1,7 +1,5 @@
 {
-  "functions": {
-    "api/checkin.js": {
-      "runtime": "edge"
-    }
-  }
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
