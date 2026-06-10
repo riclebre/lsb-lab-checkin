@@ -16,7 +16,6 @@ export default async function handler(req, res) {
   const NOTION_DB_ID    = process.env.NOTION_DB_ID;
   const DRIVE_FOLDER_ID = process.env.DRIVE_FOLDER_ID;
   const DRIVE_SA_EMAIL  = process.env.DRIVE_SA_EMAIL;
-  // Fix: restore \n characters that Vercel strips from env vars
   const DRIVE_SA_KEY    = (process.env.DRIVE_SA_KEY || '').replace(/\\n/g, '\n');
 
   if (!NOTION_TOKEN || !NOTION_DB_ID) {
@@ -24,8 +23,8 @@ export default async function handler(req, res) {
   }
 
   // ── 1. GOOGLE DRIVE UPLOAD ──────────────────────────────────────────────
-  let driveFileUrl  = null;
-  let driveError    = null;
+  let driveFileUrl = null;
+  let driveError   = null;
 
   if (fileBase64 && fileName && DRIVE_SA_EMAIL && DRIVE_SA_KEY && DRIVE_FOLDER_ID) {
     try {
@@ -36,11 +35,17 @@ export default async function handler(req, res) {
       const userFolder  = email.split('@')[0].toLowerCase();
       const equipFolder = equipamento;
 
+      // Create folder structure with supportsAllDrives
       const folderId = await ensureFolderPath(token, DRIVE_FOLDER_ID, [monthFolder, userFolder, equipFolder]);
 
       const mimeType = fileMime || 'application/octet-stream';
       const boundary = 'lsb_boundary_' + Date.now();
-      const metadata = JSON.stringify({ name: fileName, parents: [folderId] });
+
+      // metadata — no parents ownership issue with supportsAllDrives
+      const metadata = JSON.stringify({
+        name: fileName,
+        parents: [folderId]
+      });
 
       const multipart = Buffer.concat([
         Buffer.from(`--${boundary}\r\nContent-Type: application/json\r\n\r\n`),
@@ -50,8 +55,9 @@ export default async function handler(req, res) {
         Buffer.from(`\r\n--${boundary}--`)
       ]);
 
+      // supportsAllDrives=true allows uploading to folders shared with service account
       const uploadRes = await fetch(
-        'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink',
+        'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink&supportsAllDrives=true',
         {
           method: 'POST',
           headers: {
@@ -63,8 +69,15 @@ export default async function handler(req, res) {
       );
 
       const uploadData = await uploadRes.json();
-      if (uploadRes.ok && uploadData.webViewLink) {
-        driveFileUrl = uploadData.webViewLink;
+
+      if (uploadRes.ok && uploadData.id) {
+        // Make file readable by anyone with the link
+        await fetch(`https://www.googleapis.com/drive/v3/files/${uploadData.id}/permissions?supportsAllDrives=true`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role: 'reader', type: 'anyone' })
+        });
+        driveFileUrl = `https://drive.google.com/file/d/${uploadData.id}/view`;
         console.log('Drive upload OK:', driveFileUrl);
       } else {
         driveError = JSON.stringify(uploadData);
@@ -75,14 +88,13 @@ export default async function handler(req, res) {
       console.error('Drive exception:', driveErr.message);
     }
   } else {
-    // Log why Drive was skipped
     const missing = [];
-    if (!fileBase64)       missing.push('fileBase64');
-    if (!fileName)         missing.push('fileName');
-    if (!DRIVE_SA_EMAIL)   missing.push('DRIVE_SA_EMAIL');
-    if (!DRIVE_SA_KEY)     missing.push('DRIVE_SA_KEY');
-    if (!DRIVE_FOLDER_ID)  missing.push('DRIVE_FOLDER_ID');
-    if (missing.length) console.log('Drive skipped, missing:', missing.join(', '));
+    if (!fileBase64)      missing.push('fileBase64');
+    if (!fileName)        missing.push('fileName');
+    if (!DRIVE_SA_EMAIL)  missing.push('DRIVE_SA_EMAIL');
+    if (!DRIVE_SA_KEY)    missing.push('DRIVE_SA_KEY');
+    if (!DRIVE_FOLDER_ID) missing.push('DRIVE_FOLDER_ID');
+    if (missing.length)   console.log('Drive skipped, missing:', missing.join(', '));
   }
 
   // ── 2. NOTION CARD ──────────────────────────────────────────────────────
@@ -155,8 +167,8 @@ async function getGoogleToken(clientEmail, privateKeyPem) {
     iat: now
   };
 
-  const header  = b64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
-  const payload = b64url(JSON.stringify(claim));
+  const header   = b64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
+  const payload  = b64url(JSON.stringify(claim));
   const sigInput = `${header}.${payload}`;
 
   const keyData = privateKeyPem
@@ -173,13 +185,11 @@ async function getGoogleToken(clientEmail, privateKeyPem) {
   );
 
   const sigBuffer = await crypto.subtle.sign(
-    'RSASSA-PKCS1-v1_5',
-    cryptoKey,
+    'RSASSA-PKCS1-v1_5', cryptoKey,
     new TextEncoder().encode(sigInput)
   );
 
-  const signature = b64url(sigBuffer);
-  const jwt = `${sigInput}.${signature}`;
+  const jwt = `${sigInput}.${b64url(sigBuffer)}`;
 
   const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
@@ -204,18 +214,24 @@ async function ensureFolderPath(token, rootId, parts) {
 }
 
 async function findOrCreateFolder(token, parentId, name) {
-  const q = encodeURIComponent(`name='${name}' and mimeType='application/vnd.google-apps.folder' and '${parentId}' in parents and trashed=false`);
+  const q = encodeURIComponent(
+    `name='${name}' and mimeType='application/vnd.google-apps.folder' and '${parentId}' in parents and trashed=false`
+  );
   const searchRes = await fetch(
-    `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`,
+    `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)&supportsAllDrives=true&includeItemsFromAllDrives=true`,
     { headers: { 'Authorization': `Bearer ${token}` } }
   );
   const searchData = await searchRes.json();
   if (searchData.files && searchData.files.length > 0) return searchData.files[0].id;
 
-  const createRes = await fetch('https://www.googleapis.com/drive/v3/files', {
+  const createRes = await fetch('https://www.googleapis.com/drive/v3/files?supportsAllDrives=true', {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] })
+    body: JSON.stringify({
+      name,
+      mimeType: 'application/vnd.google-apps.folder',
+      parents: [parentId]
+    })
   });
   const createData = await createRes.json();
   if (!createData.id) throw new Error('Falha ao criar pasta: ' + JSON.stringify(createData));
