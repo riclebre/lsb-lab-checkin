@@ -202,15 +202,13 @@
 
 <header class="header">
   <div class="header-logo">
-    <div class="header-logo-text">
-      <span class="brand">Link School of Business</span>
-      <span class="sub">Laboratório de Prototipação Digital</span>
-    </div>
+    <img src="Logotipo%20Link%20Branco.png" alt="Link School of Business" style="height:32px;display:block;">
+    <span class="sub" style="color:rgba(255,255,255,0.45);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;margin-top:2px;display:block;">Fab Studio</span>
   </div>
   <div class="header-right">
     <div class="header-lab">Lab Check-in</div>
     <button class="header-admin-btn" onclick="toggleAdmin()" id="adminToggle">
-      <i class="ti ti-settings" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>Admin
+      <i class="ti ti-chart-bar" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>Status
     </button>
   </div>
 </header>
@@ -235,9 +233,9 @@
 
         <!-- S1 -->
         <div class="screen active" id="s1">
-          <div class="screen-title">Bem-vindo ao Lab</div>
+          <div class="screen-title">Bem-vindo ao Fab Studio</div>
           <span class="gold-line"></span>
-          <div class="screen-sub">Faça seu check-in para começar. Use o e-mail institucional da LSB.</div>
+          <div class="screen-sub">Faça seu check-in para usar o espaço. Use o e-mail institucional da Link.</div>
           <div class="field">
             <label>E-mail institucional</label>
             <input type="email" id="emailInput" placeholder="nome.sobrenome@aluno.lsb.edu.br" autocomplete="email">
@@ -249,7 +247,7 @@
             <div class="field-error" id="nameErr">Preencha seu nome para continuar.</div>
           </div>
           <div class="field">
-            <label>Turma</label>
+            <label>Turma / Cargo</label>
             <input type="text" id="turmaInput" placeholder="Ex: ADM 2024.1">
           </div>
           <button class="btn-primary" onclick="goS2()">Continuar <i class="ti ti-arrow-right"></i></button>
@@ -259,16 +257,17 @@
         <div class="screen" id="s2">
           <div class="screen-title">Regras do Laboratório</div>
           <span class="gold-line"></span>
-          <div class="screen-sub">Esta é sua primeira visita. Leia as regras antes de usar os equipamentos.</div>
+          <div class="screen-sub">Leia atentamente as regras para o uso do espaço e equipamentos.</div>
           <div class="safety-box">
-            <div class="safety-header"><i class="ti ti-shield-check"></i><span>Procedimentos de segurança</span></div>
+            <div class="safety-header"><i class="ti ti-shield-check"></i><span>AVISO:</span></div>
             <div class="safety-list">
-              <div class="safety-item"><div class="safety-dot"></div><span>Não opere equipamentos sem treinamento prévio ou sem monitor presente.</span></div>
-              <div class="safety-item"><div class="safety-dot"></div><span>Use os EPIs adequados a cada equipamento (óculos, luvas, protetor auricular).</span></div>
-              <div class="safety-item"><div class="safety-dot"></div><span>Nunca deixe um equipamento em operação sem supervisão ativa.</span></div>
-              <div class="safety-item"><div class="safety-dot"></div><span>Relate qualquer incidente ou anormalidade imediatamente ao monitor.</span></div>
+              <div class="safety-item"><div class="safety-dot"></div><span>É proibido retirar qualquer equipamento ou ferramenta do espaço.</span></div>
+              <div class="safety-item"><div class="safety-dot"></div><span>Nunca opere equipamentos sem treinamento prévio. Não altere configurações sem avisar a equipe.</span></div>
+              <div class="safety-item"><div class="safety-dot"></div><span>Sempre use os EPIs (óculos, luvas, protetor auricular) quando obrigatório.</span></div>
               <div class="safety-item"><div class="safety-dot"></div><span>Organize e limpe o espaço após o uso — deixe como encontrou.</span></div>
               <div class="safety-item"><div class="safety-dot"></div><span>Tenha o arquivo de trabalho pronto antes de iniciar a execução.</span></div>
+              <div class="safety-item"><div class="safety-dot"></div><span>Nunca deixe um equipamento em operação sem supervisão ativa.</span></div>
+              <div class="safety-item"><div class="safety-dot"></div><span><strong>Relate qualquer incidente ou anormalidade imediatamente ao monitor. Você não será punido, queremos apenas manter a segurança e integridade dos equipamentos e todos que utilizam dos mesmos.</strong></span></div>
             </div>
           </div>
           <label class="checkbox-row">
@@ -315,10 +314,6 @@
             <div class="sub-options" id="subOptions3D">
               <div class="sub-label"><i class="ti ti-corner-down-right"></i>Selecione a impressora</div>
               <div class="sub-grid">
-                <div class="sub-card" onclick="select3D(this,'3D Luizinho')">
-                  <div class="sub-icon"><i class="ti ti-printer"></i></div>
-                  <div class="sub-name">Luizinho</div>
-                </div>
                 <div class="sub-card" onclick="select3D(this,'3D Huguinho')">
                   <div class="sub-icon"><i class="ti ti-printer"></i></div>
                   <div class="sub-name">Huguinho</div>
@@ -326,6 +321,10 @@
                 <div class="sub-card" onclick="select3D(this,'3D Zezinho')">
                   <div class="sub-icon"><i class="ti ti-printer"></i></div>
                   <div class="sub-name">Zezinho</div>
+                </div>
+                <div class="sub-card" onclick="select3D(this,'3D Luizinho')">
+                  <div class="sub-icon"><i class="ti ti-printer"></i></div>
+                  <div class="sub-name">Luizinho</div>
                 </div>
               </div>
             </div>
@@ -380,7 +379,6 @@
             <div class="confirm-icon"><i class="ti ti-check"></i></div>
             <div class="screen-title">Check-in realizado!</div>
             <div class="screen-sub" style="margin-bottom:0">Seu projeto foi adicionado à fila de trabalhos.</div>
-            <div class="queue-pill"><i class="ti ti-list-numbers"></i> Posição na fila: #<span id="queueNum">—</span></div>
           </div>
           <span class="gold-line" style="display:block;margin:20px auto;width:32px"></span>
           <div class="integration-row int-notion">
@@ -392,8 +390,8 @@
             Arquivo salvo no Google Drive do laboratório.
           </div>
           <table class="summary-table">
-            <tr><td class="key">Aluno</td><td class="val" id="cName">—</td></tr>
-            <tr><td class="key">Turma</td><td class="val" id="cTurma">—</td></tr>
+            <tr><td class="key">Usuário</td><td class="val" id="cName">—</td></tr>
+            <tr><td class="key">Turma / Cargo</td><td class="val" id="cTurma">—</td></tr>
             <tr><td class="key">Equipamento</td><td class="val" id="cEquip">—</td></tr>
             <tr><td class="key">Projeto</td><td class="val" id="cProj">—</td></tr>
             <tr><td class="key">Arquivo</td><td class="val" id="cFile">—</td></tr>
@@ -428,7 +426,7 @@
         <div class="section-eyebrow">Fila de trabalhos</div>
         <table class="queue-tbl">
           <thead><tr><th>#</th><th>Aluno</th><th>Equipamento</th><th>Projeto</th><th>Status</th></tr></thead>
-          <tbody>
+          <tbody id="queueTbody">
             <tr><td style="color:var(--gray-text);font-size:11px">01</td><td>Ana Lima</td><td>3D Luizinho</td><td>Case smartphone</td><td><span class="pill pill-running"><i class="ti ti-player-play" style="font-size:9px"></i> Em execução</span></td></tr>
             <tr><td style="color:var(--gray-text);font-size:11px">02</td><td>Pedro Souza</td><td>LASER</td><td>Painel de madeira</td><td><span class="pill pill-running"><i class="ti ti-player-play" style="font-size:9px"></i> Em execução</span></td></tr>
             <tr><td style="color:var(--gray-text);font-size:11px">03</td><td>Mariana Costa</td><td>3D Huguinho</td><td>Peça de encaixe</td><td><span class="pill pill-scheduled"><i class="ti ti-clock" style="font-size:9px"></i> Agendada</span></td></tr>
@@ -436,16 +434,21 @@
             <tr><td style="color:var(--gray-text);font-size:11px">05</td><td>Julia Alves</td><td>ROLAND</td><td>Rótulos embalagem</td><td><span class="pill pill-scheduled"><i class="ti ti-clock" style="font-size:9px"></i> Agendada</span></td></tr>
           </tbody>
         </table>
+        <div id="queueOverflowNotice" style="display:none;margin-top:8px;font-size:11px;color:var(--gray-text);display:flex;align-items:center;gap:5px;">
+          <i class="ti ti-info-circle" style="font-size:13px;flex-shrink:0;"></i>
+          <span>Existem mais trabalhos na fila que não estão sendo exibidos no momento.</span>
+        </div>
         <div class="admin-divider"></div>
-        <div class="section-eyebrow">Equipamentos — últimos 30 dias</div>
+        <div class="section-eyebrow">Uso de equipamentos — últimos 30 dias</div>
         <div id="barChart"></div>
+        <div id="barTotal" style="margin-top:12px;font-size:12px;font-weight:600;color:var(--navy);text-align:right;border-top:1px solid var(--gray-mid);padding-top:10px;"></div>
       </div>
     </div>
   </div>
 
 </main>
 
-<footer>Link School of Business &nbsp;·&nbsp; Laboratório de Prototipação Digital</footer>
+<footer>Link School of Business &nbsp;·&nbsp; Fab Studio &nbsp;·&nbsp; 2026</footer>
 
 <script>
 // ── STATE ──
@@ -658,23 +661,32 @@ function toggleAdmin() {
     renderBars();
   } else {
     sw.style.display = ''; aw.style.display = 'none';
-    btn.innerHTML = '<i class="ti ti-settings" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>Admin';
+    btn.innerHTML = '<i class="ti ti-chart-bar" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>Status';
   }
 }
 
 function renderBars() {
   const data = [
-    { label:'3D Luizinho', val:22 }, { label:'3D Huguinho', val:18 },
-    { label:'LASER', val:31 }, { label:'ROLAND', val:18 },
-    { label:'3D Zezinho', val:7 }, { label:'OUTROS', val:9 }
+    { label:'3D Huguinho', val:18 }, { label:'3D Zezinho', val:7 },
+    { label:'3D Luizinho', val:22 }, { label:'ROLAND', val:18 },
+    { label:'LASER', val:31 }, { label:'OUTROS', val:9 }
   ];
-  const max = Math.max(...data.map(d => d.val));
+  const max   = Math.max(...data.map(d => d.val));
+  const total = data.reduce((s, d) => s + d.val, 0);
   document.getElementById('barChart').innerHTML = data.map(d => `
     <div class="bar-row">
       <div class="bar-label">${d.label}</div>
       <div class="bar-track"><div class="bar-fill" style="width:${Math.round(d.val/max*100)}%"></div></div>
       <div class="bar-count">${d.val}</div>
     </div>`).join('');
+  document.getElementById('barTotal').textContent = `Total realizado nos últimos 30 dias: ${total}`;
+  checkQueueOverflow();
+}
+
+function checkQueueOverflow() {
+  const rows   = document.getElementById('queueTbody').querySelectorAll('tr').length;
+  const notice = document.getElementById('queueOverflowNotice');
+  notice.style.display = rows > 5 ? 'flex' : 'none';
 }
 
 // ── HELPERS ──
