@@ -415,33 +415,44 @@
     <div class="card">
       <div class="card-body">
         <button class="back-link" onclick="toggleAdmin()"><i class="ti ti-arrow-left"></i> Voltar ao check-in</button>
-        <div class="section-eyebrow">Visão geral — hoje</div>
-        <div class="metrics-row">
-          <div class="metric"><div class="m-label">Check-ins</div><div class="m-val">12</div><div class="m-sub">hoje</div></div>
-          <div class="metric"><div class="m-label">Na fila</div><div class="m-val">4</div><div class="m-sub">aguardando</div></div>
-          <div class="metric"><div class="m-label">Em execução</div><div class="m-val">2</div><div class="m-sub">agora</div></div>
-          <div class="metric"><div class="m-label">Concluídos</div><div class="m-val">6</div><div class="m-sub">hoje</div></div>
+
+        <!-- Loading -->
+        <div id="statusLoading" style="display:none;align-items:center;justify-content:center;gap:10px;padding:40px 0;color:var(--gray-text);font-size:13px;">
+          <div class="spinner"></div> Carregando dados do Notion…
         </div>
-        <div class="admin-divider"></div>
-        <div class="section-eyebrow">Fila de trabalhos</div>
-        <table class="queue-tbl">
-          <thead><tr><th>#</th><th>Aluno</th><th>Equipamento</th><th>Projeto</th><th>Status</th></tr></thead>
-          <tbody id="queueTbody">
-            <tr><td style="color:var(--gray-text);font-size:11px">01</td><td>Ana Lima</td><td>3D Luizinho</td><td>Case smartphone</td><td><span class="pill pill-running"><i class="ti ti-player-play" style="font-size:9px"></i> Em execução</span></td></tr>
-            <tr><td style="color:var(--gray-text);font-size:11px">02</td><td>Pedro Souza</td><td>LASER</td><td>Painel de madeira</td><td><span class="pill pill-running"><i class="ti ti-player-play" style="font-size:9px"></i> Em execução</span></td></tr>
-            <tr><td style="color:var(--gray-text);font-size:11px">03</td><td>Mariana Costa</td><td>3D Huguinho</td><td>Peça de encaixe</td><td><span class="pill pill-scheduled"><i class="ti ti-clock" style="font-size:9px"></i> Agendada</span></td></tr>
-            <tr><td style="color:var(--gray-text);font-size:11px">04</td><td>Lucas Ferreira</td><td>OUTROS</td><td>Protótipo IoT</td><td><span class="pill pill-pending"><i class="ti ti-paperclip" style="font-size:9px"></i> Pendente</span></td></tr>
-            <tr><td style="color:var(--gray-text);font-size:11px">05</td><td>Julia Alves</td><td>ROLAND</td><td>Rótulos embalagem</td><td><span class="pill pill-scheduled"><i class="ti ti-clock" style="font-size:9px"></i> Agendada</span></td></tr>
-          </tbody>
-        </table>
-        <div id="queueOverflowNotice" style="display:none;margin-top:8px;font-size:11px;color:var(--gray-text);display:flex;align-items:center;gap:5px;">
-          <i class="ti ti-info-circle" style="font-size:13px;flex-shrink:0;"></i>
-          <span>Existem mais trabalhos na fila que não estão sendo exibidos no momento.</span>
+
+        <!-- Error -->
+        <div id="statusError" style="display:none;align-items:center;gap:10px;background:#FEF2F2;border:1.5px solid #FECACA;border-radius:var(--radius-md);padding:12px 16px;font-size:13px;color:#991B1B;margin-bottom:16px;">
+          <i class="ti ti-alert-circle" style="font-size:18px;flex-shrink:0;"></i>
+          <span id="statusErrorMsg">Erro ao carregar dados.</span>
+          <button onclick="loadStatus()" style="margin-left:auto;background:none;border:1px solid #FECACA;color:#991B1B;border-radius:var(--radius-sm);padding:4px 10px;font-size:11px;cursor:pointer;font-family:'Inter',sans-serif;">Tentar novamente</button>
         </div>
-        <div class="admin-divider"></div>
-        <div class="section-eyebrow">Uso de equipamentos — últimos 30 dias</div>
-        <div id="barChart"></div>
-        <div id="barTotal" style="margin-top:12px;font-size:12px;font-weight:600;color:var(--navy);text-align:right;border-top:1px solid var(--gray-mid);padding-top:10px;"></div>
+
+        <!-- Content -->
+        <div id="statusContent" style="display:none">
+          <div class="section-eyebrow">Visão geral — hoje</div>
+          <div class="metrics-row">
+            <div class="metric"><div class="m-label">Check-ins</div><div class="m-val" id="mCheckin">—</div><div class="m-sub">hoje</div></div>
+            <div class="metric"><div class="m-label">Na fila</div><div class="m-val" id="mFila">—</div><div class="m-sub">aguardando</div></div>
+            <div class="metric"><div class="m-label">Em execução</div><div class="m-val" id="mExec">—</div><div class="m-sub">agora</div></div>
+            <div class="metric"><div class="m-label">Concluídos</div><div class="m-val" id="mDone">—</div><div class="m-sub">hoje</div></div>
+          </div>
+          <div class="admin-divider"></div>
+          <div class="section-eyebrow">Fila de trabalhos</div>
+          <table class="queue-tbl">
+            <thead><tr><th>#</th><th>Aluno</th><th>Equipamento</th><th>Projeto</th><th>Status</th></tr></thead>
+            <tbody id="queueTbody"></tbody>
+          </table>
+          <div id="queueOverflowNotice" style="display:none;margin-top:8px;font-size:11px;color:var(--gray-text);align-items:center;gap:5px;">
+            <i class="ti ti-info-circle" style="font-size:13px;flex-shrink:0;"></i>
+            <span>Mostrando os 20 primeiros. Veja o Notion para a lista completa.</span>
+          </div>
+          <div class="admin-divider"></div>
+          <div class="section-eyebrow">Uso de equipamentos — últimos 30 dias</div>
+          <div id="barChart"></div>
+          <div id="barTotal" style="margin-top:12px;font-size:12px;font-weight:600;color:var(--navy);text-align:right;border-top:1px solid var(--gray-mid);padding-top:10px;"></div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -657,35 +668,74 @@ function toggleAdmin() {
   if (aw.style.display === 'none') {
     sw.style.display = 'none'; aw.style.display = '';
     btn.innerHTML = '<i class="ti ti-arrow-left" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>Voltar';
-    renderBars();
+    loadStatus();
   } else {
     sw.style.display = ''; aw.style.display = 'none';
     btn.innerHTML = '<i class="ti ti-chart-bar" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>Status';
   }
 }
 
-function renderBars() {
-  const data = [
-    { label:'3D Huguinho', val:18 }, { label:'3D Zezinho', val:7 },
-    { label:'3D Luizinho', val:22 }, { label:'ROLAND', val:18 },
-    { label:'LASER', val:31 }, { label:'OUTROS', val:9 }
-  ];
-  const max   = Math.max(...data.map(d => d.val));
-  const total = data.reduce((s, d) => s + d.val, 0);
-  document.getElementById('barChart').innerHTML = data.map(d => `
-    <div class="bar-row">
-      <div class="bar-label">${d.label}</div>
-      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(d.val/max*100)}%"></div></div>
-      <div class="bar-count">${d.val}</div>
-    </div>`).join('');
-  document.getElementById('barTotal').textContent = `Total realizado nos últimos 30 dias: ${total}`;
-  checkQueueOverflow();
-}
+async function loadStatus() {
+  // Show loading state
+  document.getElementById('statusLoading').style.display = 'flex';
+  document.getElementById('statusContent').style.display = 'none';
+  document.getElementById('statusError').style.display = 'none';
 
-function checkQueueOverflow() {
-  const rows   = document.getElementById('queueTbody').querySelectorAll('tr').length;
-  const notice = document.getElementById('queueOverflowNotice');
-  notice.style.display = rows > 5 ? 'flex' : 'none';
+  try {
+    const res = await fetch('/api/status');
+    if (!res.ok) throw new Error('Erro ao carregar dados.');
+    const data = await res.json();
+
+    // Metrics
+    const m = data.metrics;
+    document.getElementById('mCheckin').textContent  = m.checkinHoje;
+    document.getElementById('mFila').textContent     = m.naFila;
+    document.getElementById('mExec').textContent     = m.emExecucao;
+    document.getElementById('mDone').textContent     = m.concluidos;
+
+    // Queue
+    const STATUS_PILL = {
+      'Agendada':    '<span class="pill pill-scheduled"><i class="ti ti-clock" style="font-size:9px"></i> Agendada</span>',
+      'Em execução': '<span class="pill pill-running"><i class="ti ti-player-play" style="font-size:9px"></i> Em execução</span>',
+    };
+    const tbody = document.getElementById('queueTbody');
+    if (data.queue.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray-text);font-size:12px;padding:16px">Nenhum trabalho na fila no momento.</td></tr>';
+    } else {
+      tbody.innerHTML = data.queue.map(r => `
+        <tr>
+          <td style="color:var(--gray-text);font-size:11px">${String(r.pos).padStart(2,'0')}</td>
+          <td>${r.aluno}</td>
+          <td>${r.machine}</td>
+          <td>${r.projeto}</td>
+          <td>${STATUS_PILL[r.status] || r.status}</td>
+        </tr>`).join('');
+    }
+    document.getElementById('queueOverflowNotice').style.display = data.queue.length >= 20 ? 'flex' : 'none';
+
+    // Bar chart
+    if (data.usage.length === 0) {
+      document.getElementById('barChart').innerHTML = '<div style="font-size:12px;color:var(--gray-text);padding:8px 0">Sem dados nos últimos 30 dias.</div>';
+      document.getElementById('barTotal').textContent = '';
+    } else {
+      const max   = Math.max(...data.usage.map(d => d.val));
+      const total = data.usage.reduce((s, d) => s + d.val, 0);
+      document.getElementById('barChart').innerHTML = data.usage.map(d => `
+        <div class="bar-row">
+          <div class="bar-label">${d.label}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.round(d.val/max*100)}%"></div></div>
+          <div class="bar-count">${d.val}</div>
+        </div>`).join('');
+      document.getElementById('barTotal').textContent = `Total realizado nos últimos 30 dias: ${total}`;
+    }
+
+    document.getElementById('statusLoading').style.display = 'none';
+    document.getElementById('statusContent').style.display = 'block';
+  } catch (err) {
+    document.getElementById('statusLoading').style.display = 'none';
+    document.getElementById('statusError').style.display = 'flex';
+    document.getElementById('statusErrorMsg').textContent = err.message;
+  }
 }
 
 // ── HELPERS ──
