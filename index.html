@@ -600,7 +600,6 @@ async function doCheckin() {
     document.getElementById('cProj').textContent  = proj;
     document.getElementById('cFile').textContent  = fileName || '—';
     document.getElementById('cTime').textContent  = ts;
-    document.getElementById('queueNum').textContent = Math.floor(Math.random() * 5) + 2;
     if (data.driveFileUrl) document.getElementById('driveRow').style.display = 'flex';
 
     visitedBefore = true;
