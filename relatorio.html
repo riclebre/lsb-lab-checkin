@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relatório de Uso — Fab Studio LSB</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+  :root {
+    --navy:      #10284E;
+    --navy-mid:  #546484;
+    --navy-light:#1a3a6e;
+    --gold:      #FEC641;
+    --gold-dim:  #F5B800;
+    --white:     #FFFFFF;
+    --gray-bg:   #F4F6F9;
+    --gray-mid:  #EAEAEA;
+    --gray-text: #6B7280;
+    --danger:    #DC2626;
+    --success:   #16A34A;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --shadow-md: 0 4px 16px rgba(16,40,78,0.12);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: var(--gray-bg); color: var(--navy); min-height: 100vh; display: flex; flex-direction: column; }
+
+  .header { background: var(--navy); padding: 0 24px; height: 60px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .header-logo { display: flex; align-items: center; gap: 10px; }
+  .header-right { color: var(--gold); font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; }
+
+  .main { flex: 1; display: flex; justify-content: center; padding: 32px 16px 48px; }
+  .wrap { width: 100%; max-width: 720px; }
+
+  /* LOGIN */
+  .login-card { background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); max-width: 380px; margin: 60px auto 0; padding: 36px 32px; }
+  .login-card h2 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .login-card p  { font-size: 13px; color: var(--gray-text); margin-bottom: 24px; }
+  .gold-line { display: block; width: 32px; height: 3px; background: var(--gold); border-radius: 2px; margin: 8px 0 20px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--navy-mid); margin-bottom: 6px; }
+  .field input { width: 100%; padding: 10px 14px; border: 1.5px solid var(--gray-mid); border-radius: var(--radius-md); font-size: 14px; font-family: 'Inter', sans-serif; color: var(--navy); outline: none; }
+  .field input:focus { border-color: var(--navy); box-shadow: 0 0 0 3px rgba(16,40,78,0.08); }
+  .btn-primary { width: 100%; padding: 12px 20px; background: var(--navy); color: #fff; border: none; border-radius: var(--radius-md); font-size: 14px; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; margin-top: 8px; transition: 0.18s; }
+  .btn-primary:hover { background: var(--navy-light); }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+  .login-error { display: none; align-items: center; gap: 8px; background: #FEF2F2; border: 1.5px solid #FECACA; border-radius: var(--radius-md); padding: 10px 14px; font-size: 13px; color: #991B1B; margin-bottom: 14px; }
+  .login-error.visible { display: flex; }
+
+  /* REPORT */
+  .report-header { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; flex-wrap: wrap; }
+  .report-header h2 { font-size: 20px; font-weight: 700; color: var(--navy); flex: 1; }
+  .month-select { padding: 8px 14px; border: 1.5px solid var(--gray-mid); border-radius: var(--radius-md); font-size: 13px; font-family: 'Inter', sans-serif; color: var(--navy); background: #fff; cursor: pointer; outline: none; }
+  .month-select:focus { border-color: var(--navy); }
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+  .kpi { background: var(--white); border-radius: var(--radius-md); padding: 14px 16px; border: 1px solid var(--gray-mid); box-shadow: 0 2px 8px rgba(16,40,78,0.06); }
+  .kpi .k-label { font-size: 10px; color: var(--gray-text); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 500; }
+  .kpi .k-val   { font-size: 26px; font-weight: 700; color: var(--navy); line-height: 1.2; margin-top: 2px; }
+  .kpi .k-sub   { font-size: 11px; color: var(--gray-text); margin-top: 2px; }
+  .report-card { background: var(--white); border-radius: var(--radius-md); border: 1px solid var(--gray-mid); box-shadow: 0 2px 8px rgba(16,40,78,0.06); padding: 20px; margin-bottom: 16px; }
+  .report-card h3 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--gold-dim); margin-bottom: 16px; }
+
+  /* Barras equipamento */
+  .equip-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .equip-row-name { width: 110px; font-size: 12px; color: var(--gray-text); text-align: right; flex-shrink: 0; }
+  .equip-row-track { flex: 1; height: 22px; background: var(--gray-bg); border-radius: 3px; overflow: hidden; border: 1px solid var(--gray-mid); }
+  .equip-row-fill  { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+  .fill-3d    { background: var(--gold); }
+  .fill-other { background: var(--navy); }
+  .equip-row-info  { font-size: 11px; font-weight: 600; color: var(--navy); white-space: nowrap; width: 110px; }
+
+  /* Ratio */
+  .ratio-bar { display: flex; height: 28px; border-radius: var(--radius-sm); overflow: hidden; margin: 12px 0 8px; }
+  .ratio-aluno { background: var(--navy); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: #fff; transition: width 0.5s ease; }
+  .ratio-staff { background: var(--gold); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--navy); transition: width 0.5s ease; }
+  .ratio-legend { display: flex; gap: 16px; font-size: 11px; color: var(--gray-text); }
+  .ratio-legend span { display: flex; align-items: center; gap: 5px; }
+  .ratio-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+  /* Destaques */
+  .destaque-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .destaque-card { background: var(--white); border-radius: var(--radius-md); border: 1px solid var(--gray-mid); box-shadow: 0 2px 8px rgba(16,40,78,0.06); padding: 18px; }
+  .destaque-card h3 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--gold-dim); margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+  .destaque-card h3 i { font-size: 14px; }
+  .destaque-item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--gray-mid); }
+  .destaque-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .destaque-rank { width: 22px; height: 22px; border-radius: 50%; background: var(--gray-bg); font-size: 10px; font-weight: 700; color: var(--navy-mid); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .destaque-rank.gold { background: var(--gold); color: var(--navy); }
+  .destaque-info { flex: 1; min-width: 0; }
+  .destaque-name { font-size: 13px; font-weight: 600; color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .destaque-sub  { font-size: 11px; color: var(--gray-text); margin-top: 2px; }
+  .destaque-badge { font-size: 12px; font-weight: 700; color: var(--navy); white-space: nowrap; flex-shrink: 0; }
+  .destaque-empty { font-size: 12px; color: var(--gray-text); text-align: center; padding: 16px 0; }
+
+  /* Pills */
+  .pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 99px; font-size: 10px; font-weight: 600; }
+  .pill-scheduled { background: #DBEAFE; color: #1E40AF; }
+  .pill-running   { background: #FEE2E2; color: #991B1B; }
+  .pill-done      { background: #DCFCE7; color: #166534; }
+  .tipo-badge { display: inline-block; padding: 1px 7px; border-radius: 99px; font-size: 10px; font-weight: 600; }
+  .tipo-aluno { background: #DBEAFE; color: #1E40AF; }
+  .tipo-staff { background: #FEF3C7; color: #92400E; }
+
+  /* Spinner */
+  .loading-state { display: none; align-items: center; justify-content: center; gap: 10px; padding: 60px 0; color: var(--gray-text); font-size: 13px; }
+  .loading-state.visible { display: flex; }
+  .spinner { width: 32px; height: 32px; border: 3px solid var(--gray-mid); border-top-color: var(--navy); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-state { display: none; align-items: center; gap: 10px; background: #FEF2F2; border: 1.5px solid #FECACA; border-radius: var(--radius-md); padding: 12px 16px; font-size: 13px; color: #991B1B; margin-bottom: 16px; }
+  .error-state.visible { display: flex; }
+
+  footer { text-align: center; padding: 16px; font-size: 11px; color: var(--gray-text); }
+
+  @media (max-width: 600px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .destaque-grid { grid-template-columns: 1fr; }
+    .equip-row-name { width: 80px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-logo">
+    <img src="Logotipo%20Link%20Branco.png" alt="Link School of Business" style="height:32px;display:block;">
+    <span style="color:rgba(255,255,255,0.45);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;margin-left:8px;">Fab Studio</span>
+  </div>
+  <div class="header-right">Relatório de Uso</div>
+</header>
+
+<main class="main">
+  <div class="wrap">
+
+    <!-- LOGIN -->
+    <div id="loginView">
+      <div class="login-card">
+        <h2>Acesso Restrito</h2>
+        <span class="gold-line"></span>
+        <p>Esta área é exclusiva para a diretoria do Fab Studio.</p>
+        <div class="login-error" id="loginError">
+          <i class="ti ti-alert-circle"></i>
+          <span id="loginErrorMsg">Senha incorreta.</span>
+        </div>
+        <div class="field">
+          <label>Senha</label>
+          <input type="password" id="passwordInput" placeholder="••••••••" onkeydown="if(event.key==='Enter') doLogin()">
+        </div>
+        <button class="btn-primary" id="loginBtn" onclick="doLogin()">Entrar <i class="ti ti-arrow-right"></i></button>
+      </div>
+    </div>
+
+    <!-- REPORT -->
+    <div id="reportView" style="display:none">
+
+      <div class="report-header">
+        <h2>Relatório de Uso — Fab Studio</h2>
+        <select class="month-select" id="monthSelect" onchange="loadReport()">
+          <option value="">Carregando…</option>
+        </select>
+      </div>
+
+      <div class="loading-state" id="reportLoading"><div class="spinner"></div> Carregando dados do Notion…</div>
+      <div class="error-state"   id="reportError"><i class="ti ti-alert-circle" style="font-size:18px;flex-shrink:0"></i><span id="reportErrorMsg"></span></div>
+
+      <div id="reportContent" style="display:none">
+
+        <!-- KPIs -->
+        <div class="kpi-grid">
+          <div class="kpi"><div class="k-label">Projetos no mês</div><div class="k-val" id="kTotal">—</div><div class="k-sub">atendimentos</div></div>
+          <div class="kpi"><div class="k-label">Total de horas</div><div class="k-val" id="kHoras">—</div><div class="k-sub">em execução</div></div>
+          <div class="kpi"><div class="k-label">Tempo médio</div><div class="k-val" id="kMedia">—</div><div class="k-sub">horas / sessão</div></div>
+          <div class="kpi"><div class="k-label">Usuários únicos</div><div class="k-val" id="kUsers">—</div><div class="k-sub">pessoas</div></div>
+        </div>
+
+        <!-- Equipamentos -->
+        <div class="report-card">
+          <h3>Projetos por equipamento</h3>
+          <div id="equipBars"></div>
+        </div>
+
+        <!-- Alunos vs Staff -->
+        <div class="report-card">
+          <h3>Proporção Alunos × Staff</h3>
+          <div class="ratio-bar">
+            <div class="ratio-aluno" id="ratioAluno" style="width:50%">Alunos</div>
+            <div class="ratio-staff" id="ratioStaff" style="width:50%">Staff</div>
+          </div>
+          <div class="ratio-legend">
+            <span><div class="ratio-dot" style="background:var(--navy)"></div><span id="legendAluno">—</span></span>
+            <span><div class="ratio-dot" style="background:var(--gold)"></div><span id="legendStaff">—</span></span>
+          </div>
+        </div>
+
+        <!-- Destaques -->
+        <div class="destaque-grid">
+          <div class="destaque-card">
+            <h3><i class="ti ti-repeat"></i> Usuários frequentes</h3>
+            <div id="destFreq"><div class="destaque-empty">Nenhum usuário com 2+ sessões.</div></div>
+          </div>
+          <div class="destaque-card">
+            <h3><i class="ti ti-clock-bolt"></i> Sessões longas</h3>
+            <div id="destLong"><div class="destaque-empty">Nenhuma sessão com 4h+.</div></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer>Link School of Business &nbsp;·&nbsp; Fab Studio &nbsp;·&nbsp; 2026 &nbsp;·&nbsp; Acesso restrito</footer>
+
+<script>
+const SESSION_KEY = 'lsb_report_pw';
+
+function savedPw() { return sessionStorage.getItem(SESSION_KEY) || ''; }
+
+async function doLogin() {
+  const pw  = document.getElementById('passwordInput').value;
+  const btn = document.getElementById('loginBtn');
+  const err = document.getElementById('loginError');
+  err.classList.remove('visible');
+  btn.disabled = true; btn.textContent = 'Verificando…';
+
+  try {
+    const res  = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pw })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Senha incorreta.');
+    sessionStorage.setItem(SESSION_KEY, pw);
+    document.getElementById('loginView').style.display  = 'none';
+    document.getElementById('reportView').style.display = '';
+    initReport();
+  } catch (e) {
+    document.getElementById('loginErrorMsg').textContent = e.message;
+    err.classList.add('visible');
+  } finally {
+    btn.disabled = false; btn.innerHTML = 'Entrar <i class="ti ti-arrow-right"></i>';
+  }
+}
+
+async function initReport() {
+  document.getElementById('reportLoading').classList.add('visible');
+  try {
+    const res  = await fetch('/api/report', { headers: { 'x-report-password': savedPw() } });
+    if (!res.ok) throw new Error('Erro ao carregar meses.');
+    const data = await res.json();
+    const sel  = document.getElementById('monthSelect');
+    sel.innerHTML = data.availableMonths.map(ym => {
+      const [y, m] = ym.split('-');
+      const label  = new Date(+y, +m - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+      return `<option value="${ym}">${label.charAt(0).toUpperCase() + label.slice(1)}</option>`;
+    }).join('');
+    document.getElementById('reportLoading').classList.remove('visible');
+    if (data.availableMonths.length > 0) loadReport();
+  } catch (err) {
+    document.getElementById('reportLoading').classList.remove('visible');
+    document.getElementById('reportError').classList.add('visible');
+    document.getElementById('reportErrorMsg').textContent = err.message;
+  }
+}
+
+async function loadReport() {
+  const ym = document.getElementById('monthSelect').value;
+  if (!ym) return;
+  const [year, month] = ym.split('-');
+
+  document.getElementById('reportLoading').classList.add('visible');
+  document.getElementById('reportContent').style.display = 'none';
+  document.getElementById('reportError').classList.remove('visible');
+
+  try {
+    const res  = await fetch(`/api/report?year=${year}&month=${month}`, {
+      headers: { 'x-report-password': savedPw() }
+    });
+    if (!res.ok) throw new Error('Erro ao carregar relatório.');
+    const { data } = await res.json();
+
+    // KPIs
+    document.getElementById('kTotal').textContent = data.total;
+    document.getElementById('kHoras').textContent = data.totalHoras > 0 ? data.totalHoras + 'h' : '—';
+    document.getElementById('kMedia').textContent = data.avgTempoGeral !== null ? data.avgTempoGeral + 'h' : '—';
+    document.getElementById('kUsers').textContent = data.alunosUnicos + data.staffUnicos;
+
+    // Equipamentos
+    const max = Math.max(...data.equipList.map(e => e.count), 1);
+    document.getElementById('equipBars').innerHTML = data.equipList.map(e => `
+      <div class="equip-row">
+        <div class="equip-row-name">${e.machine}</div>
+        <div class="equip-row-track">
+          <div class="equip-row-fill ${e.is3d ? 'fill-3d' : 'fill-other'}" style="width:${Math.round(e.count/max*100)}%"></div>
+        </div>
+        <div class="equip-row-info">${e.count} proj${e.avgTempo !== null ? ' · ø ' + e.avgTempo + 'h' : ''}</div>
+      </div>`).join('');
+
+    // Ratio
+    const tot = data.alunos + data.staff || 1;
+    const pA  = Math.round(data.alunos / tot * 100), pS = 100 - pA;
+    document.getElementById('ratioAluno').style.width = pA + '%';
+    document.getElementById('ratioStaff').style.width = pS + '%';
+    document.getElementById('ratioAluno').textContent = pA > 10 ? `Alunos ${pA}%` : '';
+    document.getElementById('ratioStaff').textContent = pS > 10 ? `Staff ${pS}%` : '';
+    document.getElementById('legendAluno').textContent = `Alunos — ${data.alunos} sessões (${data.alunosUnicos} únicos)`;
+    document.getElementById('legendStaff').textContent = `Staff — ${data.staff} sessões (${data.staffUnicos} únicos)`;
+
+    // Destaques — Frequentes
+    const freq = data.destaques.usuariosFrequentes;
+    document.getElementById('destFreq').innerHTML = freq.length === 0
+      ? '<div class="destaque-empty">Nenhum usuário com 2+ sessões.</div>'
+      : freq.map((u, i) => `
+        <div class="destaque-item">
+          <div class="destaque-rank ${i===0?'gold':''}">${i+1}</div>
+          <div class="destaque-info">
+            <div class="destaque-name">${u.aluno}</div>
+            <div class="destaque-sub"><span class="tipo-badge tipo-${u.tipo}">${u.tipo}</span> ${u.email}</div>
+          </div>
+          <div class="destaque-badge">${u.count} sessões</div>
+        </div>`).join('');
+
+    // Destaques — Longas
+    const long = data.destaques.sessoesLongas;
+    document.getElementById('destLong').innerHTML = long.length === 0
+      ? '<div class="destaque-empty">Nenhuma sessão com 4h+.</div>'
+      : long.map((s, i) => `
+        <div class="destaque-item">
+          <div class="destaque-rank ${i===0?'gold':''}">${i+1}</div>
+          <div class="destaque-info">
+            <div class="destaque-name">${s.projeto}</div>
+            <div class="destaque-sub">${s.aluno} · ${s.machine}</div>
+          </div>
+          <div class="destaque-badge">${s.tempo}h</div>
+        </div>`).join('');
+
+    document.getElementById('reportLoading').classList.remove('visible');
+    document.getElementById('reportContent').style.display = 'block';
+  } catch (err) {
+    document.getElementById('reportLoading').classList.remove('visible');
+    document.getElementById('reportError').classList.add('visible');
+    document.getElementById('reportErrorMsg').textContent = err.message;
+  }
+}
+
+// Auto-login se já tiver senha na sessão
+if (savedPw()) {
+  document.getElementById('loginView').style.display  = 'none';
+  document.getElementById('reportView').style.display = '';
+  initReport();
+}
+</script>
+</body>
+</html>

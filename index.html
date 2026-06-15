@@ -187,40 +187,7 @@
 
   footer { text-align: center; padding: 16px; font-size: 11px; color: var(--gray-text); }
 
-  /* REPORT */
-  .report-wrap { width: 100%; max-width: 700px; }
-  .report-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
-  .report-header h2 { font-size: 18px; font-weight: 700; color: var(--navy); flex: 1; }
-  .month-select { padding: 8px 14px; border: 1.5px solid var(--gray-mid); border-radius: var(--radius-md); font-size: 13px; font-family: 'Inter', sans-serif; color: var(--navy); background: #fff; cursor: pointer; outline: none; }
-  .month-select:focus { border-color: var(--navy); }
-  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 24px; }
-  .kpi { background: var(--white); border-radius: var(--radius-md); padding: 14px 16px; border: 1px solid var(--gray-mid); box-shadow: 0 2px 8px rgba(16,40,78,0.06); }
-  .kpi .k-label { font-size: 10px; color: var(--gray-text); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 500; }
-  .kpi .k-val   { font-size: 26px; font-weight: 700; color: var(--navy); line-height: 1.2; margin-top: 2px; }
-  .kpi .k-sub   { font-size: 11px; color: var(--gray-text); margin-top: 2px; }
-  .report-card { background: var(--white); border-radius: var(--radius-md); border: 1px solid var(--gray-mid); box-shadow: 0 2px 8px rgba(16,40,78,0.06); padding: 20px; margin-bottom: 16px; }
-  .report-card h3 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--gold-dim); margin-bottom: 16px; }
-  .equip-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-  .equip-row-name { width: 140px; font-size: 12px; color: var(--gray-text); text-align: right; flex-shrink: 0; }
-  .equip-row-track { flex: 1; height: 20px; background: var(--gray-bg); border-radius: 3px; overflow: hidden; border: 1px solid var(--gray-mid); }
-  .equip-row-fill  { height: 100%; background: var(--navy); border-radius: 3px; transition: width 0.5s ease; }
-  .equip-row-info  { font-size: 11px; font-weight: 600; color: var(--navy); white-space: nowrap; width: 90px; }
-  .ratio-bar { display: flex; height: 28px; border-radius: var(--radius-sm); overflow: hidden; margin: 12px 0 8px; }
-  .ratio-aluno { background: var(--navy); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: #fff; transition: width 0.5s ease; }
-  .ratio-staff { background: var(--gold); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--navy); transition: width 0.5s ease; }
-  .ratio-legend { display: flex; gap: 16px; font-size: 11px; color: var(--gray-text); }
-  .ratio-legend span { display: flex; align-items: center; gap: 5px; }
-  .ratio-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
-  .sessions-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
-  .sessions-tbl th { text-align: left; padding: 6px 8px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--gray-text); border-bottom: 1.5px solid var(--gray-mid); }
-  .sessions-tbl td { padding: 8px 8px; border-bottom: 1px solid var(--gray-mid); color: var(--navy); vertical-align: middle; }
-  .sessions-tbl tr:last-child td { border-bottom: none; }
-  .tipo-badge { display: inline-block; padding: 1px 7px; border-radius: 99px; font-size: 10px; font-weight: 600; }
-  .tipo-aluno { background: #DBEAFE; color: #1E40AF; }
-  .tipo-staff { background: #FEF3C7; color: #92400E; }
-  .report-empty { text-align: center; padding: 40px 0; color: var(--gray-text); font-size: 13px; }
-
-  @media (max-width: 480px) {
+@media (max-width: 480px) {
     .main { padding: 16px 0 32px; }
     .card { border-radius: 0; box-shadow: none; }
     .card-body { padding: 20px 18px; }
@@ -240,10 +207,7 @@
   </div>
   <div class="header-right">
     <div class="header-lab">Lab Check-in</div>
-    <button class="header-admin-btn" onclick="toggleReport()" id="reportToggle">
-      <i class="ti ti-file-analytics" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>Relatório
-    </button>
-    <button class="header-admin-btn" onclick="toggleAdmin()" id="adminToggle">
+<button class="header-admin-btn" onclick="toggleAdmin()" id="adminToggle">
       <i class="ti ti-chart-bar" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>Status
     </button>
   </div>
@@ -493,78 +457,6 @@
     </div>
   </div>
 
-  <!-- REPORT PAGE -->
-  <div class="card-wrap report-wrap" id="reportWrap" style="display:none">
-    <div class="card">
-      <div class="card-body">
-        <button class="back-link" onclick="toggleReport()"><i class="ti ti-arrow-left"></i> Voltar ao check-in</button>
-
-        <div class="report-header">
-          <h2>Relatório de Uso</h2>
-          <select class="month-select" id="monthSelect" onchange="loadReport()">
-            <option value="">Carregando meses…</option>
-          </select>
-        </div>
-
-        <!-- Loading -->
-        <div id="reportLoading" style="display:none;align-items:center;justify-content:center;gap:10px;padding:40px 0;color:var(--gray-text);font-size:13px;">
-          <div class="spinner"></div> Carregando dados…
-        </div>
-
-        <!-- Error -->
-        <div id="reportError" style="display:none;align-items:center;gap:10px;background:#FEF2F2;border:1.5px solid #FECACA;border-radius:var(--radius-md);padding:12px 16px;font-size:13px;color:#991B1B;margin-bottom:16px;">
-          <i class="ti ti-alert-circle" style="font-size:18px;flex-shrink:0;"></i>
-          <span id="reportErrorMsg">Erro ao carregar dados.</span>
-        </div>
-
-        <!-- Content -->
-        <div id="reportContent" style="display:none">
-
-          <!-- KPIs -->
-          <div class="kpi-grid">
-            <div class="kpi"><div class="k-label">Projetos no mês</div><div class="k-val" id="kTotal">—</div><div class="k-sub">sessões</div></div>
-            <div class="kpi"><div class="k-label">Total de horas</div><div class="k-val" id="kHoras">—</div><div class="k-sub">previstas</div></div>
-            <div class="kpi"><div class="k-label">Tempo médio</div><div class="k-val" id="kMedia">—</div><div class="k-sub">horas / sessão</div></div>
-            <div class="kpi"><div class="k-label">Usuários únicos</div><div class="k-val" id="kUsers">—</div><div class="k-sub">pessoas</div></div>
-          </div>
-
-          <!-- Uso por equipamento -->
-          <div class="report-card">
-            <h3>Projetos por equipamento</h3>
-            <div id="equipBars"></div>
-          </div>
-
-          <!-- Alunos vs Staff -->
-          <div class="report-card">
-            <h3>Proporção Alunos × Staff</h3>
-            <div class="ratio-bar">
-              <div class="ratio-aluno" id="ratioAluno" style="width:50%">Alunos</div>
-              <div class="ratio-staff" id="ratioStaff" style="width:50%">Staff</div>
-            </div>
-            <div class="ratio-legend">
-              <span><div class="ratio-dot" style="background:var(--navy)"></div><span id="legendAluno">—</span></span>
-              <span><div class="ratio-dot" style="background:var(--gold)"></div><span id="legendStaff">—</span></span>
-            </div>
-          </div>
-
-          <!-- Sessões -->
-          <div class="report-card">
-            <h3>Lista de sessões</h3>
-            <div style="overflow-x:auto">
-              <table class="sessions-tbl">
-                <thead>
-                  <tr><th>Data</th><th>Aluno / Staff</th><th>Equipamento</th><th>Projeto</th><th>Tempo</th><th>Status</th></tr>
-                </thead>
-                <tbody id="sessionsTbody"></tbody>
-              </table>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div>
-  </div>
-
 </main>
 
 <footer>Link School of Business &nbsp;·&nbsp; Fab Studio &nbsp;·&nbsp; 2026</footer>
@@ -579,122 +471,6 @@ const VALID_DOMAINS = ['lsb.edu.br','lsb.com.br','aluno.lsb.edu.br','aluno.lsb.c
 function validDomain(email) {
   const d = (email.split('@')[1] || '').toLowerCase();
   return VALID_DOMAINS.some(v => d === v || d.endsWith('.' + v));
-}
-
-// ── REPORT ──
-function toggleReport() {
-  const sw  = document.getElementById('studentWrap');
-  const aw  = document.getElementById('adminWrap');
-  const rw  = document.getElementById('reportWrap');
-  const btn = document.getElementById('reportToggle');
-  const isOpen = rw.style.display !== 'none';
-  // reset all
-  sw.style.display = ''; aw.style.display = 'none'; rw.style.display = 'none';
-  document.getElementById('adminToggle').innerHTML = '<i class="ti ti-chart-bar" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>Status';
-  btn.innerHTML = '<i class="ti ti-file-analytics" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>Relatório';
-  if (!isOpen) {
-    sw.style.display = 'none'; rw.style.display = '';
-    btn.innerHTML = '<i class="ti ti-arrow-left" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>Voltar';
-    initReport();
-  }
-}
-
-async function initReport() {
-  document.getElementById('reportLoading').style.display = 'flex';
-  document.getElementById('reportContent').style.display = 'none';
-  document.getElementById('reportError').style.display   = 'none';
-  try {
-    const res  = await fetch('/api/report');
-    if (!res.ok) throw new Error('Erro ao carregar meses.');
-    const data = await res.json();
-    const sel  = document.getElementById('monthSelect');
-    sel.innerHTML = data.availableMonths.map(ym => {
-      const [y, m] = ym.split('-');
-      const label  = new Date(+y, +m - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-      return `<option value="${ym}">${label.charAt(0).toUpperCase() + label.slice(1)}</option>`;
-    }).join('');
-    document.getElementById('reportLoading').style.display = 'none';
-    if (data.availableMonths.length > 0) loadReport();
-    else document.getElementById('reportContent').innerHTML = '<div class="report-empty">Nenhum dado encontrado.</div>';
-  } catch (err) {
-    document.getElementById('reportLoading').style.display = 'none';
-    document.getElementById('reportError').style.display   = 'flex';
-    document.getElementById('reportErrorMsg').textContent  = err.message;
-  }
-}
-
-async function loadReport() {
-  const sel = document.getElementById('monthSelect');
-  const ym  = sel.value;
-  if (!ym) return;
-  const [year, month] = ym.split('-');
-
-  document.getElementById('reportLoading').style.display = 'flex';
-  document.getElementById('reportContent').style.display = 'none';
-  document.getElementById('reportError').style.display   = 'none';
-
-  try {
-    const res  = await fetch(`/api/report?year=${year}&month=${month}`);
-    if (!res.ok) throw new Error('Erro ao carregar relatório.');
-    const { data } = await res.json();
-
-    // KPIs
-    document.getElementById('kTotal').textContent = data.total;
-    document.getElementById('kHoras').textContent = data.totalHoras > 0 ? data.totalHoras + 'h' : '—';
-    document.getElementById('kMedia').textContent = data.avgTempoGeral !== null ? data.avgTempoGeral + 'h' : '—';
-    document.getElementById('kUsers').textContent = data.alunosUnicos + data.staffUnicos;
-
-    // Equipamentos
-    const max = Math.max(...data.equipList.map(e => e.count), 1);
-    document.getElementById('equipBars').innerHTML = data.equipList.map(e => `
-      <div class="equip-row">
-        <div class="equip-row-name">${e.machine}</div>
-        <div class="equip-row-track"><div class="equip-row-fill" style="width:${Math.round(e.count/max*100)}%"></div></div>
-        <div class="equip-row-info">${e.count} proj${e.avgTempo !== null ? ' · ø ' + e.avgTempo + 'h' : ''}</div>
-      </div>`).join('');
-
-    // Ratio
-    const total = data.alunos + data.staff || 1;
-    const pA = Math.round(data.alunos / total * 100);
-    const pS = 100 - pA;
-    document.getElementById('ratioAluno').style.width = pA + '%';
-    document.getElementById('ratioStaff').style.width = pS + '%';
-    document.getElementById('ratioAluno').textContent = pA > 10 ? `Alunos ${pA}%` : '';
-    document.getElementById('ratioStaff').textContent = pS > 10 ? `Staff ${pS}%` : '';
-    document.getElementById('legendAluno').textContent = `Alunos — ${data.alunos} sessões (${data.alunosUnicos} únicos)`;
-    document.getElementById('legendStaff').textContent = `Staff — ${data.staff} sessões (${data.staffUnicos} únicos)`;
-
-    // Sessions
-    const STATUS_PILL = {
-      'Agendada':    '<span class="pill pill-scheduled">Agendada</span>',
-      'Em execução': '<span class="pill pill-running">Em execução</span>',
-      'Concluída':   '<span class="pill pill-done">Concluída</span>',
-    };
-    const tbody = document.getElementById('sessionsTbody');
-    if (data.sessions.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray-text);padding:20px">Nenhuma sessão neste mês.</td></tr>';
-    } else {
-      tbody.innerHTML = data.sessions.map(s => `
-        <tr>
-          <td>${s.date ? new Date(s.date + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}</td>
-          <td>
-            <div style="font-weight:500">${s.aluno}</div>
-            <div style="font-size:10px;color:var(--gray-text)">${s.email}</div>
-          </td>
-          <td>${s.machine}</td>
-          <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.projeto}</td>
-          <td>${s.tempo !== null ? s.tempo + 'h' : '—'}</td>
-          <td>${STATUS_PILL[s.status] || s.status || '—'}</td>
-        </tr>`).join('');
-    }
-
-    document.getElementById('reportLoading').style.display = 'none';
-    document.getElementById('reportContent').style.display = 'block';
-  } catch (err) {
-    document.getElementById('reportLoading').style.display = 'none';
-    document.getElementById('reportError').style.display   = 'flex';
-    document.getElementById('reportErrorMsg').textContent  = err.message;
-  }
 }
 
 // ── STEPS ──
