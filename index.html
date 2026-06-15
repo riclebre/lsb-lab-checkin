@@ -366,7 +366,7 @@
               <button class="file-remove" onclick="removeFile(event)"><i class="ti ti-x"></i></button>
             </div>
             <input type="file" id="fileInput" style="display:none" onchange="fileChosen(this)">
-            <div class="field-hint">O arquivo será salvo automaticamente no Google Drive do laboratório.</div>
+            <div class="field-hint">O arquivo será salvo automaticamente no Google Drive do laboratório. Tamanho máximo: 3 MB.</div>
           </div>
           <button class="btn-primary" id="submitBtn" onclick="doCheckin()">
             Confirmar check-in <i class="ti ti-check"></i>
@@ -577,6 +577,14 @@ async function doCheckin() {
     let fileMime   = null;
     if (fileInput.files && fileInput.files[0]) {
       const f = fileInput.files[0];
+      const MAX_BYTES = 3 * 1024 * 1024; // 3 MB — margem segura antes do limite de 4.5 MB do Vercel
+      if (f.size > MAX_BYTES) {
+        document.getElementById('errorMsg').textContent = `Arquivo muito grande (${(f.size/1024/1024).toFixed(1)} MB). O limite é 3 MB. Compacte a imagem ou envie em PDF.`;
+        document.getElementById('errorToast').classList.add('visible');
+        document.getElementById('loadingOverlay').classList.remove('visible');
+        document.getElementById('submitBtn').disabled = false;
+        return;
+      }
       fileMime = f.type || 'application/octet-stream';
       fileBase64 = await new Promise((resolve, reject) => {
         const reader = new FileReader();
