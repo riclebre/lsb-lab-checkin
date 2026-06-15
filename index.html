@@ -366,7 +366,7 @@
               <button class="file-remove" onclick="removeFile(event)"><i class="ti ti-x"></i></button>
             </div>
             <input type="file" id="fileInput" style="display:none" onchange="fileChosen(this)">
-            <div class="field-hint">O arquivo será salvo automaticamente no Google Drive do laboratório. Tamanho máximo: 3 MB.</div>
+            <div class="field-hint">O arquivo será salvo automaticamente no Google Drive do laboratório.</div>
           </div>
           <button class="btn-primary" id="submitBtn" onclick="doCheckin()">
             Confirmar check-in <i class="ti ti-check"></i>
@@ -572,27 +572,45 @@ async function doCheckin() {
   document.getElementById('submitBtn').disabled = true;
 
   try {
-    // Convert file to base64 if present
-    let fileBase64 = null;
-    let fileMime   = null;
+    // Upload file directly to Google Drive (sem passar pelo Vercel)
+    let driveFileId = null;
     if (fileInput.files && fileInput.files[0]) {
       const f = fileInput.files[0];
-      const MAX_BYTES = 3 * 1024 * 1024; // 3 MB — margem segura antes do limite de 4.5 MB do Vercel
-      if (f.size > MAX_BYTES) {
-        document.getElementById('errorMsg').textContent = `Arquivo muito grande (${(f.size/1024/1024).toFixed(1)} MB). O limite é 3 MB. Compacte a imagem ou envie em PDF.`;
-        document.getElementById('errorToast').classList.add('visible');
-        document.getElementById('loadingOverlay').classList.remove('visible');
-        document.getElementById('submitBtn').disabled = false;
-        return;
-      }
-      fileMime = f.type || 'application/octet-stream';
-      fileBase64 = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload  = () => resolve(reader.result.split(',')[1]);
-        reader.onerror = reject;
-        reader.readAsDataURL(f);
+      const fileMime = f.type || 'application/octet-stream';
+
+      document.getElementById('loadingOverlay').querySelector('.loading-text').textContent = 'Obtendo autorização de upload…';
+
+      // 1. Pedir URL de upload autorizada ao servidor (só metadados, sem o arquivo)
+      const urlRes = await fetch('/api/drive-upload-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fileName: fileName,
+          fileMime,
+          email,
+          equipamento: selectedEquip,
+          dataCheckin: isoDate
+        })
       });
+      if (!urlRes.ok) {
+        const urlErr = await urlRes.json();
+        throw new Error(urlErr.error || 'Erro ao obter autorização de upload.');
+      }
+      const { uploadUrl } = await urlRes.json();
+
+      // 2. Fazer upload direto para o Google Drive (browser → Drive, sem Vercel)
+      document.getElementById('loadingOverlay').querySelector('.loading-text').textContent = 'Enviando arquivo para o Drive…';
+      const uploadRes = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': fileMime },
+        body: f
+      });
+      if (!uploadRes.ok) throw new Error('Falha no upload do arquivo para o Drive.');
+      const uploadData = await uploadRes.json();
+      driveFileId = uploadData.id;
     }
+
+    document.getElementById('loadingOverlay').querySelector('.loading-text').textContent = 'Registrando check-in…';
 
     const res = await fetch('/api/checkin', {
       method: 'POST',
@@ -603,9 +621,8 @@ async function doCheckin() {
         nomeProjeto: proj,
         descricao: desc,
         dataCheckin: isoDate,
-        fileBase64,
-        fileName: fileName || null,
-        fileMime
+        driveFileId,
+        fileName: fileName || null
       })
     });
 

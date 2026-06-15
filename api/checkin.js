@@ -6,95 +6,39 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { nome, email, turma, equipamento, nomeProjeto, descricao, dataCheckin, fileBase64, fileName, fileMime } = req.body;
+  const { nome, email, turma, equipamento, nomeProjeto, descricao, dataCheckin, driveFileId, fileName } = req.body;
 
   if (!nome || !email || !equipamento || !nomeProjeto) {
     return res.status(400).json({ error: 'Campos obrigatórios ausentes.' });
   }
 
-  const NOTION_TOKEN    = process.env.NOTION_TOKEN;
-  const NOTION_DB_ID    = process.env.NOTION_DB_ID;
-  const DRIVE_FOLDER_ID = process.env.DRIVE_FOLDER_ID;
-  const DRIVE_SA_EMAIL  = process.env.DRIVE_SA_EMAIL;
-  const DRIVE_SA_KEY    = (process.env.DRIVE_SA_KEY || '').replace(/\\n/g, '\n');
+  const NOTION_TOKEN   = process.env.NOTION_TOKEN;
+  const NOTION_DB_ID   = process.env.NOTION_DB_ID;
+  const DRIVE_SA_EMAIL = process.env.DRIVE_SA_EMAIL;
+  const DRIVE_SA_KEY   = (process.env.DRIVE_SA_KEY || '').replace(/\\n/g, '\n');
 
   if (!NOTION_TOKEN || !NOTION_DB_ID) {
     return res.status(500).json({ error: 'Variáveis Notion não configuradas.' });
   }
 
-  // ── 1. GOOGLE DRIVE UPLOAD ──────────────────────────────────────────────
+  // ── 1. GOOGLE DRIVE — set public permission on already-uploaded file ────
   let driveFileUrl = null;
   let driveError   = null;
 
-  if (fileBase64 && fileName && DRIVE_SA_EMAIL && DRIVE_SA_KEY && DRIVE_FOLDER_ID) {
+  if (driveFileId && DRIVE_SA_EMAIL && DRIVE_SA_KEY) {
     try {
       const token = await getGoogleToken(DRIVE_SA_EMAIL, DRIVE_SA_KEY);
-
-      const now         = new Date(dataCheckin || Date.now());
-      const monthFolder = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}`;
-      const userFolder  = email.split('@')[0].toLowerCase();
-      const equipFolder = equipamento;
-
-      // Create folder structure with supportsAllDrives
-      const folderId = await ensureFolderPath(token, DRIVE_FOLDER_ID, [monthFolder, userFolder, equipFolder]);
-
-      const mimeType = fileMime || 'application/octet-stream';
-      const boundary = 'lsb_boundary_' + Date.now();
-
-      // metadata — no parents ownership issue with supportsAllDrives
-      const metadata = JSON.stringify({
-        name: fileName,
-        parents: [folderId]
+      await fetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}/permissions?supportsAllDrives=true`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: 'reader', type: 'anyone' })
       });
-
-      const multipart = Buffer.concat([
-        Buffer.from(`--${boundary}\r\nContent-Type: application/json\r\n\r\n`),
-        Buffer.from(metadata),
-        Buffer.from(`\r\n--${boundary}\r\nContent-Type: ${mimeType}\r\nContent-Transfer-Encoding: base64\r\n\r\n`),
-        Buffer.from(fileBase64),
-        Buffer.from(`\r\n--${boundary}--`)
-      ]);
-
-      // supportsAllDrives=true allows uploading to folders shared with service account
-      const uploadRes = await fetch(
-        'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink&supportsAllDrives=true',
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': `multipart/related; boundary=${boundary}`,
-          },
-          body: multipart
-        }
-      );
-
-      const uploadData = await uploadRes.json();
-
-      if (uploadRes.ok && uploadData.id) {
-        // Make file readable by anyone with the link
-        await fetch(`https://www.googleapis.com/drive/v3/files/${uploadData.id}/permissions?supportsAllDrives=true`, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ role: 'reader', type: 'anyone' })
-        });
-        driveFileUrl = `https://drive.google.com/file/d/${uploadData.id}/view`;
-        console.log('Drive upload OK:', driveFileUrl);
-      } else {
-        driveError = JSON.stringify(uploadData);
-        console.error('Drive upload failed:', driveError);
-      }
+      driveFileUrl = `https://drive.google.com/file/d/${driveFileId}/view`;
+      console.log('Drive permission OK:', driveFileUrl);
     } catch (driveErr) {
       driveError = driveErr.message;
-      console.error('Drive exception:', driveErr.message);
+      console.error('Drive permission exception:', driveErr.message);
     }
-  } else {
-    const missing = [];
-    if (!fileBase64)      missing.push('fileBase64');
-    if (!fileName)        missing.push('fileName');
-    if (!DRIVE_SA_EMAIL)  missing.push('DRIVE_SA_EMAIL');
-    if (!DRIVE_SA_KEY)    missing.push('DRIVE_SA_KEY');
-    if (!DRIVE_FOLDER_ID) missing.push('DRIVE_FOLDER_ID');
-    if (missing.length)   console.log('Drive skipped, missing:', missing.join(', '));
   }
 
   // ── 2. NOTION CARD ──────────────────────────────────────────────────────
