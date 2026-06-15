@@ -578,38 +578,42 @@ async function doCheckin() {
       const f = fileInput.files[0];
       const fileMime = f.type || 'application/octet-stream';
 
-      // 1. Pedir URL de upload autorizada ao servidor (só metadados, sem o arquivo)
-      document.getElementById('loadingOverlay').querySelector('.loading-text').textContent = 'Obtendo autorização de upload…';
-      const urlRes = await fetch('/api/drive-upload-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fileName, fileMime, email, equipamento: selectedEquip, dataCheckin: isoDate })
-      });
-      if (!urlRes.ok) {
-        const urlErr = await urlRes.json().catch(() => ({}));
-        throw new Error(urlErr.error || 'Erro ao obter autorização de upload.');
-      }
-      const { uploadUrl } = await urlRes.json();
-
-      // 2. Upload direto browser → Drive (sem limite de tamanho)
-      document.getElementById('loadingOverlay').querySelector('.loading-text').textContent = 'Enviando arquivo para o Drive…';
-      const uploadRes = await fetch(uploadUrl, {
-        method: 'PUT',
-        headers: { 'Content-Type': fileMime },
-        body: f
-      });
-
-      if (uploadRes.ok) {
-        // Extrai o ID do arquivo — se a resposta não for JSON, segue sem o link
-        try {
-          const uploadData = await uploadRes.json();
-          driveFileId = uploadData.id || null;
-        } catch (_) {
-          console.warn('Drive respondeu OK mas sem JSON — arquivo salvo sem link.');
+      try {
+        // 1. Pedir URL de upload autorizada ao servidor (só metadados, sem o arquivo)
+        document.getElementById('loadingOverlay').querySelector('.loading-text').textContent = 'Obtendo autorização de upload…';
+        const urlRes = await fetch('/api/drive-upload-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fileName, fileMime, email, equipamento: selectedEquip, dataCheckin: isoDate })
+        });
+        if (!urlRes.ok) {
+          const urlErr = await urlRes.json().catch(() => ({}));
+          throw new Error(urlErr.error || 'Erro ao obter URL de upload.');
         }
-      } else {
-        // Upload falhou: avisa mas não bloqueia o check-in
-        console.error('Drive upload status:', uploadRes.status);
+        const { uploadUrl } = await urlRes.json();
+
+        // 2. Upload direto browser → Drive (sem limite de tamanho)
+        document.getElementById('loadingOverlay').querySelector('.loading-text').textContent = 'Enviando arquivo para o Drive…';
+        const uploadRes = await fetch(uploadUrl, {
+          method: 'PUT',
+          headers: { 'Content-Type': fileMime },
+          body: f
+        });
+
+        if (uploadRes.ok) {
+          try {
+            const uploadData = await uploadRes.json();
+            driveFileId = uploadData.id || null;
+          } catch (_) {
+            // Resposta não é JSON mas upload pode ter funcionado
+            console.warn('Drive respondeu OK mas sem JSON parseável.');
+          }
+        } else {
+          console.error('Drive upload status:', uploadRes.status);
+        }
+      } catch (driveUploadErr) {
+        // Falha no upload do arquivo NÃO bloqueia o check-in
+        console.error('Drive upload falhou, seguindo com check-in:', driveUploadErr.message);
       }
     }
 
