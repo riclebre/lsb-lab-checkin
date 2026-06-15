@@ -68,8 +68,9 @@ export default async function handler(req, res) {
     const dateStr = props['Data Start']?.date?.start || '';
     const rawMachine = props['Machine Type']?.select?.name || 'OUTROS';
     return {
-      status:  props['Status']?.select?.name || '',
-      machine: normalizeMachine(rawMachine),
+      status:     props['Status']?.select?.name || '',
+      machine:    normalizeMachine(rawMachine),
+      rawMachine,
       email:   props['Contato']?.email || '',
       aluno:   props['Nome do Aluno']?.rich_text?.[0]?.plain_text || '—',
       projeto: props['Name do Projeto']?.title?.[0]?.plain_text || '—',
@@ -92,12 +93,15 @@ export default async function handler(req, res) {
   // ── Métricas ─────────────────────────────────────────────────────────────
   const total = filtered.length;
 
-  // Por equipamento
-  const byEquip = {};
+  // Por equipamento (mantém raw para breakdown 3D)
+  const byEquip = {}, by3d = {};
   filtered.forEach(r => {
     if (!byEquip[r.machine]) byEquip[r.machine] = { count: 0, totalTempo: 0, tempoCount: 0 };
     byEquip[r.machine].count++;
     if (r.tempo !== null) { byEquip[r.machine].totalTempo += r.tempo; byEquip[r.machine].tempoCount++; }
+    if (r.machine === '3D PRINT') {
+      by3d[r.rawMachine] = (by3d[r.rawMachine] || 0) + 1;
+    }
   });
   const ORDER = ['3D PRINT', 'ROLAND', 'LASER', 'OUTROS'];
   const equipList = Object.entries(byEquip)
@@ -107,6 +111,9 @@ export default async function handler(req, res) {
       avgTempo: d.tempoCount > 0 ? Math.round((d.totalTempo / d.tempoCount) * 10) / 10 : null,
       totalTempo: d.totalTempo,
       is3d: machine === '3D PRINT',
+      breakdown: machine === '3D PRINT'
+        ? Object.entries(by3d).map(([m, c]) => ({ machine: m, count: c })).sort((a,b) => b.count - a.count)
+        : null,
     }))
     .sort((a, b) => {
       const ai = ORDER.indexOf(a.machine), bi = ORDER.indexOf(b.machine);

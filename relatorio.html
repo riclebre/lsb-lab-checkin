@@ -67,9 +67,22 @@
   .equip-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
   .equip-row-name { width: 110px; font-size: 12px; color: var(--gray-text); text-align: right; flex-shrink: 0; }
   .equip-row-track { flex: 1; height: 22px; background: var(--gray-bg); border-radius: 3px; overflow: hidden; border: 1px solid var(--gray-mid); }
-  .equip-row-fill  { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
-  .fill-3d    { background: var(--gold); }
-  .fill-other { background: var(--navy); }
+  .equip-row-fill  { height: 100%; background: var(--navy); border-radius: 3px; transition: width 0.5s ease; }
+  .equip-tooltip { position: relative; }
+  .equip-tooltip .tooltip-box {
+    display: none; position: absolute; bottom: calc(100% + 8px); left: 50%;
+    transform: translateX(-50%); background: var(--navy); color: #fff;
+    border-radius: var(--radius-sm); padding: 8px 12px; font-size: 11px;
+    white-space: nowrap; z-index: 20; pointer-events: none;
+    box-shadow: 0 4px 12px rgba(16,40,78,0.25);
+  }
+  .equip-tooltip .tooltip-box::after {
+    content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+    border: 5px solid transparent; border-top-color: var(--navy);
+  }
+  .equip-tooltip:hover .tooltip-box { display: block; }
+  .tooltip-line { display: flex; justify-content: space-between; gap: 16px; padding: 2px 0; }
+  .tooltip-line .tl-val { font-weight: 600; }
   .equip-row-info  { font-size: 11px; font-weight: 600; color: var(--navy); white-space: nowrap; width: 110px; }
 
   /* Ratio */
@@ -292,14 +305,23 @@ async function loadReport() {
 
     // Equipamentos
     const max = Math.max(...data.equipList.map(e => e.count), 1);
-    document.getElementById('equipBars').innerHTML = data.equipList.map(e => `
-      <div class="equip-row">
-        <div class="equip-row-name">${e.machine}</div>
-        <div class="equip-row-track">
-          <div class="equip-row-fill ${e.is3d ? 'fill-3d' : 'fill-other'}" style="width:${Math.round(e.count/max*100)}%"></div>
-        </div>
-        <div class="equip-row-info">${e.count} proj${e.avgTempo !== null ? ' · ø ' + e.avgTempo + 'h' : ''}</div>
-      </div>`).join('');
+    document.getElementById('equipBars').innerHTML = data.equipList.map(e => {
+      const tooltipLines = e.is3d && e.breakdown
+        ? e.breakdown.map(b => `<div class="tooltip-line"><span>${b.machine}</span><span class="tl-val">${b.count} proj</span></div>`).join('')
+        : '';
+      const tooltip = tooltipLines
+        ? `<div class="tooltip-box">${tooltipLines}</div>`
+        : '';
+      return `
+        <div class="equip-row">
+          <div class="equip-row-name">${e.machine}</div>
+          <div class="equip-row-track equip-tooltip" style="position:relative">
+            <div class="equip-row-fill" style="width:${Math.round(e.count/max*100)}%"></div>
+            ${tooltip}
+          </div>
+          <div class="equip-row-info">${e.count} proj${e.avgTempo !== null ? ' · ø ' + e.avgTempo + 'h' : ''}</div>
+        </div>`;
+    }).join('');
 
     // Ratio
     const tot = data.alunos + data.staff || 1;
