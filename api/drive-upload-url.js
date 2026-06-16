@@ -48,7 +48,7 @@ export default async function handler(req, res) {
     const uploadUrl = initRes.headers.get('location');
     if (!uploadUrl) return res.status(500).json({ error: 'URL de upload não retornada pelo Google.' });
 
-    return res.status(200).json({ uploadUrl });
+    return res.status(200).json({ uploadUrl, folderId });
 
   } catch (err) {
     return res.status(500).json({ error: 'Erro interno: ' + err.message });

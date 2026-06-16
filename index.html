@@ -574,6 +574,7 @@ async function doCheckin() {
   try {
     // Upload file directly to Google Drive (sem passar pelo Vercel)
     let driveFileId = null;
+    let driveFolderId = null;
     if (fileInput.files && fileInput.files[0]) {
       const f = fileInput.files[0];
       const fileMime = f.type || 'application/octet-stream';
@@ -590,7 +591,9 @@ async function doCheckin() {
           const urlErr = await urlRes.json().catch(() => ({}));
           throw new Error(urlErr.error || 'Erro ao obter URL de upload.');
         }
-        const { uploadUrl } = await urlRes.json();
+        const urlData = await urlRes.json();
+        const uploadUrl = urlData.uploadUrl;
+        driveFolderId = urlData.folderId || null;
 
         // 2. Upload direto browser → Drive (sem limite de tamanho)
         document.getElementById('loadingOverlay').querySelector('.loading-text').textContent = 'Enviando arquivo para o Drive…';
@@ -605,14 +608,16 @@ async function doCheckin() {
             const uploadData = await uploadRes.json();
             driveFileId = uploadData.id || null;
           } catch (_) {
-            // Resposta não é JSON mas upload pode ter funcionado
-            console.warn('Drive respondeu OK mas sem JSON parseável.');
+            // CORS bloqueia leitura da resposta do Drive — o servidor buscará o arquivo pelo nome na pasta
+            console.warn('Drive respondeu OK mas CORS impediu leitura do id — usando folderId para lookup.');
           }
         } else {
           console.error('Drive upload status:', uploadRes.status);
+          driveFolderId = null; // upload falhou, não tentar lookup
         }
       } catch (driveUploadErr) {
         // Falha no upload do arquivo NÃO bloqueia o check-in
+        driveFolderId = null;
         console.error('Drive upload falhou, seguindo com check-in:', driveUploadErr.message);
       }
     }
@@ -629,6 +634,7 @@ async function doCheckin() {
         descricao: desc,
         dataCheckin: isoDate,
         driveFileId,
+        driveFolderId,
         fileName: fileName || null
       })
     });

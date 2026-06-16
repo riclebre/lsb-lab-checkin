@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { nome, email, turma, equipamento, nomeProjeto, descricao, dataCheckin, driveFileId, fileName } = req.body;
+  const { nome, email, turma, equipamento, nomeProjeto, descricao, dataCheckin, driveFileId, driveFolderId, fileName } = req.body;
 
   if (!nome || !email || !equipamento || !nomeProjeto) {
     return res.status(400).json({ error: 'Campos obrigatórios ausentes.' });
@@ -25,16 +25,26 @@ export default async function handler(req, res) {
   let driveFileUrl = null;
   let driveError   = null;
 
-  if (driveFileId && DRIVE_SA_EMAIL && DRIVE_SA_KEY) {
+  if ((driveFileId || (driveFolderId && fileName)) && DRIVE_SA_EMAIL && DRIVE_SA_KEY) {
     try {
       const token = await getGoogleToken(DRIVE_SA_EMAIL, DRIVE_SA_KEY);
-      await fetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}/permissions?supportsAllDrives=true`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: 'reader', type: 'anyone' })
-      });
-      driveFileUrl = `https://drive.google.com/file/d/${driveFileId}/view`;
-      console.log('Drive permission OK:', driveFileUrl);
+
+      // Se o browser não conseguiu ler o id (CORS), buscar pelo nome na pasta
+      let resolvedFileId = driveFileId;
+      if (!resolvedFileId && driveFolderId && fileName) {
+        resolvedFileId = await findFileInFolder(token, driveFolderId, fileName);
+        console.log('Drive file lookup:', resolvedFileId);
+      }
+
+      if (resolvedFileId) {
+        await fetch(`https://www.googleapis.com/drive/v3/files/${resolvedFileId}/permissions?supportsAllDrives=true`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role: 'reader', type: 'anyone' })
+        });
+        driveFileUrl = `https://drive.google.com/file/d/${resolvedFileId}/view`;
+        console.log('Drive permission OK:', driveFileUrl);
+      }
     } catch (driveErr) {
       driveError = driveErr.message;
       console.error('Drive permission exception:', driveErr.message);
@@ -146,6 +156,23 @@ async function getGoogleToken(clientEmail, privateKeyPem) {
     throw new Error('Token Google falhou: ' + JSON.stringify(tokenData));
   }
   return tokenData.access_token;
+}
+
+// ── FILE LOOKUP ────────────────────────────────────────────────────────────
+async function findFileInFolder(token, folderId, name, retries = 4) {
+  const q = encodeURIComponent(
+    `name='${name.replace(/'/g, "\\'")}' and '${folderId}' in parents and trashed=false`
+  );
+  for (let i = 0; i < retries; i++) {
+    if (i > 0) await new Promise(r => setTimeout(r, 1500 * i));
+    const r = await fetch(
+      `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)&supportsAllDrives=true&includeItemsFromAllDrives=true`,
+      { headers: { 'Authorization': `Bearer ${token}` } }
+    );
+    const d = await r.json();
+    if (d.files && d.files.length > 0) return d.files[0].id;
+  }
+  return null;
 }
 
 // ── FOLDER HELPERS ─────────────────────────────────────────────────────────
