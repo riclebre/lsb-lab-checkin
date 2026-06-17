@@ -608,17 +608,22 @@ async function doCheckin() {
             const uploadData = await uploadRes.json();
             driveFileId = uploadData.id || null;
           } catch (_) {
-            // CORS bloqueia leitura da resposta do Drive — o servidor buscará o arquivo pelo nome na pasta
+            // CORS bloqueia leitura da resposta — servidor buscará o arquivo pelo nome na pasta
             console.warn('Drive respondeu OK mas CORS impediu leitura do id — usando folderId para lookup.');
           }
+        } else if (uploadRes.status === 0) {
+          // Resposta opaca por CORS: o arquivo provavelmente chegou ao Drive
+          // Mantém driveFolderId para o servidor tentar o lookup pelo nome
+          console.warn('Drive: resposta bloqueada por CORS (status 0) — tentando lookup no servidor.');
         } else {
-          console.error('Drive upload status:', uploadRes.status);
-          driveFolderId = null; // upload falhou, não tentar lookup
+          // Falha HTTP real (4xx/5xx): upload não completou
+          console.error('Drive upload falhou com status:', uploadRes.status);
+          driveFolderId = null;
         }
       } catch (driveUploadErr) {
-        // Falha no upload do arquivo NÃO bloqueia o check-in
-        driveFolderId = null;
-        console.error('Drive upload falhou, seguindo com check-in:', driveUploadErr.message);
+        // Se o fetch lançou exceção, o upload pode ter falhado antes de enviar
+        // Mantemos driveFolderId para o servidor tentar (findFileInFolder retorna null se não encontrar)
+        console.error('Drive upload exception:', driveUploadErr.message);
       }
     }
 
